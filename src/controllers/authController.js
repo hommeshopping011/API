@@ -10,7 +10,7 @@ async function login(req, res) {
 
     if (user) {
       const token = jwt.sign({ userName: user.userName }, 'secreto-seguro', { expiresIn: '1h' }); 
-      res.json({ token });
+      res.json({ token, typeUser: user.typeUser });
     } else {
       res.status(401).json({ error: 'Credenciales incorrectas' });
     }

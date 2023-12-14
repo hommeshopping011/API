@@ -11,18 +11,23 @@ async function getAllUsers(req, res) {
 }
 
 async function createUser(req, res) {
-    const { userName, password } = req.body;
+    const { userName, password, typeUser } = req.body;
     
     try {
-        const newUser = new User({ userName, password });
+        const newUser = new User({ userName, password, typeUser });
         // Guardar el nuevo usuario en la base de datos
         const savedUser = await newUser.save();
 
         // Responder con el usuario guardado
         res.status(201).json(savedUser);
     } catch (error) {
-        // Manejar errores adecuadamente
-        res.status(400).json({ message: error.message });
+        if (error.code === 11000 && error.keyPattern && error.keyPattern.userName) {
+            // Manejar error de clave duplicada (userName único)
+            res.status(400).json({ message: 'El nombre de usuario ya existe. Por favor, elija otro nombre de usuario.' });
+        } else {
+            // Manejar otros errores adecuadamente
+            res.status(400).json({ message: error.message });
+        }
     }
 }
 
@@ -42,9 +47,9 @@ async function getUser(req, res) {
 
 async function updateUser(req, res) {
     const { id } = req.params;
-    const { userName, password } = req.body;
+    const { userName, password, typeUser } = req.body;
     try {
-        const updatedUser = await User.updateOne( { _id: id }, { $set: { userName, password } });
+        const updatedUser = await User.updateOne( { _id: id }, { $set: { userName, password, typeUser } });
         res.json(updatedUser);
     } catch (error) {
         res.json({ message: error });
@@ -55,7 +60,7 @@ async function updateUser(req, res) {
 async function deleteUser(req, res) {
     const { id } = req.params;
     try {
-        const removedUser = await User.remove( { _id: id });
+        const removedUser = await User.deleteOne( { _id: id });
         res.json(removedUser);
     } catch (error) {
         res.json({ message: error });
